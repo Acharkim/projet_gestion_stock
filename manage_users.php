@@ -1,6 +1,15 @@
 <?php
 require 'config.php'; // Accès à la base de données
 
+
+session_start(); // Démarrage ou continuation de la session
+
+// Vérifier si l'utilisateur est connecté et si son rôle est 'admin'
+if (!isset($_SESSION['user_role']) || $_SESSION['user_role'] !== 'admin') {
+    // Si l'utilisateur n'est pas admin, rediriger vers une page d'erreur ou la page de connexion
+    header('Location: login.php'); // Adaptez le chemin vers votre page de connexion
+    exit;
+}
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
     $role = $_POST['role'];
