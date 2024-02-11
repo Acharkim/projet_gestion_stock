@@ -1,5 +1,5 @@
 <?php
-require 'config.php'; // accès à la base de données
+require 'config.php'; // Accès à la base de données
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
@@ -12,9 +12,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         $sql = "INSERT INTO Utilisateur (username, password, role) VALUES (?, ?, ?)";
         $stmt = $pdo->prepare($sql);
         $stmt->execute([$username, $hashedPassword, $role]);
-    } elseif ($_POST['form_action'] == 'edit') {
+    } else if ($_POST['form_action'] == 'edit') {
         // Mise à jour d'un utilisateur existant
-        $userId = $_POST['user_id']; // Assurez-vous que cet ID est bien passé via le formulaire
+        $userId = $_POST['user_id']; 
         if (!empty($password)) {
             // Si un nouveau mot de passe est fourni, le mettre à jour
             $sql = "UPDATE Utilisateur SET username = ?, password = ?, role = ? WHERE id = ?";
@@ -32,7 +32,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
 }
 
-// Formulaire HTML
 ?>
 <!DOCTYPE html>
 <html>
