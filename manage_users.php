@@ -1,98 +1,59 @@
 <?php
-require 'config.php'; // Connexion à la base de données via PDO
+require 'config.php'; // accès à la base de données
 
-$action = $_GET['action'] ?? 'list'; // Action : ajout, édition, suppression, liste
-$userId = $_GET['id'] ?? 0; // ID utilisateur pour éditer ou supprimer
-
-// Traitement des actions (add, edit, delete)
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
-    $password = $_POST['password']; // Pensez à hasher le mot de passe
     $role = $_POST['role'];
+    $password = $_POST['password']; // Le mot de passe fourni par l'utilisateur
+    $hashedPassword = password_hash($password, PASSWORD_DEFAULT); // Hashage du mot de passe
 
-    if ($_POST['action'] == 'add') {
-        // Insertion
+    if ($_POST['form_action'] == 'add') {
+        // Ajout d'un nouvel utilisateur
         $sql = "INSERT INTO Utilisateur (username, password, role) VALUES (?, ?, ?)";
         $stmt = $pdo->prepare($sql);
-        $stmt->execute([$username, password_hash($password, PASSWORD_DEFAULT), $role]);
-    } elseif ($_POST['action'] == 'edit' && $userId > 0) {
-        // Mise à jour
-        $sql = "UPDATE Utilisateur SET username = ?, role = ?".(!empty($password) ? ", password = '".password_hash($password, PASSWORD_DEFAULT)."'" : "")." WHERE id = ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$username, $role, $userId]);
+        $stmt->execute([$username, $hashedPassword, $role]);
+    } elseif ($_POST['form_action'] == 'edit') {
+        // Mise à jour d'un utilisateur existant
+        $userId = $_POST['user_id']; // Assurez-vous que cet ID est bien passé via le formulaire
+        if (!empty($password)) {
+            // Si un nouveau mot de passe est fourni, le mettre à jour
+            $sql = "UPDATE Utilisateur SET username = ?, password = ?, role = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$username, $hashedPassword, $role, $userId]);
+        } else {
+            // Si aucun mot de passe n'est fourni, ne pas mettre à jour le mot de passe
+            $sql = "UPDATE Utilisateur SET username = ?, role = ? WHERE id = ?";
+            $stmt = $pdo->prepare($sql);
+            $stmt->execute([$username, $role, $userId]);
+        }
     }
-    // Redirection pour éviter les soumissions de formulaire en double
+    
+    // Redirection pour éviter la soumission multiple du formulaire
     header('Location: manage_users.php');
     exit;
 }
 
-if ($action == 'delete' && $userId > 0) {
-    // Suppression
-    $sql = "DELETE FROM Utilisateur WHERE id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$userId]);
-    header('Location: manage_users.php');
-    exit;
-}
-
-// Préparation du formulaire pour 'edit'
-$userToEdit = null;
-if ($action == 'edit' && $userId > 0) {
-    $sql = "SELECT * FROM Utilisateur WHERE id = ?";
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute([$userId]);
-    $userToEdit = $stmt->fetch();
-}
-
-// Affichage du formulaire (ajout et édition)
+// Formulaire HTML (simplifié pour l'exemple)
 ?>
 <!DOCTYPE html>
-<html lang="fr">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Gestion des Utilisateurs</title>
-    <!-- Styles CSS -->
 </head>
 <body>
-<h2><?php echo $action == 'edit' ? 'Modifier' : 'Ajouter'; ?> un utilisateur</h2>
-<form method="post" action="manage_users.php">
-    <input type="hidden" name="action" value="<?php echo $action == 'edit' ? 'edit' : 'add'; ?>">
-    <?php if ($action == 'edit'): ?>
-        <input type="hidden" name="id" value="<?php echo $userId; ?>">
-    <?php endif; ?>
-    <label>Nom d'utilisateur:</label>
-    <input type="text" name="username" value="<?php echo $userToEdit['username'] ?? ''; ?>" required><br>
-    <label>Mot de passe:</label>
-    <input type="password" name="password"><br>
-    <label>Rôle:</label>
-    <select name="role">
-        <option value="admin" <?php if (isset($userToEdit) && $userToEdit['role'] == 'admin') echo 'selected'; ?>>Admin</option>
-        <option value="ajout_article" <?php if (isset($userToEdit) && $userToEdit['role'] == 'ajout_article') echo 'selected'; ?>>Ajout d'articles</option>
-        <option value="sortie_stock" <?php if (isset($userToEdit) && $userToEdit['role'] == 'sortie_stock') echo 'selected'; ?>>Sortie de stock</option>
-    </select><br>
-    <button type="submit"><?php echo $action == 'edit' ? 'Modifier' : 'Ajouter'; ?></button>
-</form>
-
-<h2>Liste des utilisateurs</h2>
-<table>
-    <tr>
-        <th>Nom d'utilisateur</th>
-        <th>Rôle</th>
-        <th>Actions</th>
-    </tr>
-    <?php
-    $users = $pdo->query("SELECT * FROM Utilisateur")->fetchAll();
-    foreach ($users as $user) {
-        echo "<tr>";
-        echo "<td>" . htmlspecialchars($user['username']) . "</td>";
-        echo "<td>" . htmlspecialchars($user['role']) . "</td>";
-        echo "<td>
-                <a href='?action=edit&id=" . $user['id'] . "'>Modifier</a>
-                <a href='?action=delete&id=" . $user['id'] . "' onclick='return confirm(\"Confirmer la suppression?\");'>Supprimer</a>
-              </td>";
-        echo "</tr>";
-    }
-    ?>
-</table>
+    <form method="post" action="">
+        <input type="hidden" name="form_action" value="add" /> <!-- Changez la valeur en "edit" pour la mise à jour -->
+        <input type="hidden" name="user_id" value="" /> <!-- L'ID de l'utilisateur pour l'édition -->
+        <label for="username">Nom d'utilisateur:</label>
+        <input type="text" id="username" name="username" required /><br />
+        <label for="password">Mot de passe:</label>
+        <input type="password" id="password" name="password" /><br />
+        <label for="role">Rôle:</label>
+        <select id="role" name="role">
+            <option value="admin">Admin</option>
+            <option value="user">Utilisateur</option>
+        </select><br />
+        <button type="submit">Soumettre</button>
+    </form>
 </body>
 </html>
