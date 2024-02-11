@@ -28,7 +28,6 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         }
     }
     
-    // Redirection pour éviter la soumission multiple du formulaire
     header('Location: manage_users.php');
     exit;
 }
