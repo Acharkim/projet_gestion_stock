@@ -33,12 +33,13 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     exit;
 }
 
-// Formulaire HTML (simplifié pour l'exemple)
+// Formulaire HTML
 ?>
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Gestion des Utilisateurs</title>
+    <title>...::: Gestion des Utilisateurs :::...</title>
+    <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <form method="post" action="">
