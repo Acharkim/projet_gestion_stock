@@ -27,11 +27,32 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $stmt->execute([$username, $role, $userId]);
         }
     }
+
+// Traitement de la suppression d'un utilisateur
+if ($_SERVER['REQUEST_METHOD'] == 'GET' && $_GET['action'] == 'delete' && !empty($_GET['id'])) {
+    $userId = $_GET['id'];
+    $sql = "DELETE FROM Utilisateur WHERE id = ?";
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute([$userId]);
+    header('Location: manage_users.php');
+    exit;
+}
+<?php
+$users = $pdo->query("SELECT * FROM Utilisateur")->fetchAll();
+foreach ($users as $user) {
+    echo "<div>{$user['username']} - {$user['role']} 
+        <a href='?action=edit&id={$user['id']}'>Modifier</a>
+        <a href='?action=delete&id={$user['id']}' onclick='return confirm(\"Confirmer la suppression?\");'>Supprimer</a>
+    </div>";
+}
+?>
+    
     
     header('Location: manage_users.php');
     exit;
 }
 
+    
 ?>
 <!DOCTYPE html>
 <html>
